@@ -1,20 +1,16 @@
 import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useGame } from '@/hooks/useGame';
-import { useAlert } from '@/template';
+import { useGame } from './useGame';
 export function usePackShop() {
-  const { unlocked, unlockPack, loaded } = useGame();
+  const game = useGame();
   const [preview, setPreview] = useState<string | null>(null);
   const router = useRouter();
-  const { showAlert } = useAlert();
-  const openPack = useCallback((id: string) => { if (!loaded) return; if (unlocked.includes(id)) router.push({ pathname: '/setup', params: { pack: id } }); else setPreview(id); }, [unlocked, router, loaded]);
-  const unlock = useCallback(() => {
+  const openPack = useCallback((id: string) => { if (!game.loaded) return; if (game.unlocked.includes(id)) router.push({ pathname: '/setup', params: { pack: id } }); else setPreview(id); }, [game.unlocked, game.loaded, router]);
+  const unlock = useCallback(async () => {
     if (!preview) return;
     const id = preview;
-    showAlert('فتح حزمة تجريبي', 'لن يتم خصم أي مبلغ. هذه محاكاة لشراء الحزمة، وتُحفظ على هذا الجهاز فقط.', [
-      { text: 'إلغاء', style: 'cancel' },
-      { text: 'فتح للتجربة', onPress: () => { unlockPack(id); setPreview(null); router.push({ pathname: '/setup', params: { pack: id } }); } },
-    ]);
-  }, [preview, showAlert, unlockPack, router]);
-  return { unlocked, preview, openPack, unlock, close: () => setPreview(null), loaded };
+    if (await game.purchase(id)) { setPreview(null); router.push({ pathname: '/setup', params: { pack: id } }); }
+  }, [preview, game.purchase, router]);
+  const close = useCallback(() => { if (!game.busy) setPreview(null); }, [game.busy]);
+  return { ...game, preview, openPack, unlock, close };
 }

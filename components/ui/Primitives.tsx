@@ -1,11 +1,13 @@
 import { memo, type ReactNode } from 'react';
-import { Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle } from 'react-native';
+import { Pressable, StyleSheet, Text, View, type TextStyle, type ViewStyle, type StyleProp } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { colors, radii, spacing, type as typography } from '@/constants/theme';
+import { useSettings } from '@/hooks/useSettings';
 
-type LabelProps = { children: ReactNode; style?: TextStyle | TextStyle[]; subtle?: boolean };
-export const Label = memo(function Label({ children, style, subtle = false }: LabelProps) {
-  return <Text style={[styles.text, subtle ? styles.subtle : null, style]}>{children}</Text>;
+type LabelProps = { children: ReactNode; style?: StyleProp<TextStyle>; subtle?: boolean; numberOfLines?: number };
+export const Label = memo(function Label({ children, style, subtle = false, numberOfLines }: LabelProps) {
+  const { rtl } = useSettings();
+  return <Text numberOfLines={numberOfLines} style={[styles.text, { textAlign: rtl ? 'right' : 'left', writingDirection: rtl ? 'rtl' : 'ltr' }, subtle ? styles.subtle : null, style]}>{children}</Text>;
 });
 type ButtonProps = { title: string; onPress: () => void; secondary?: boolean; disabled?: boolean; icon?: keyof typeof Feather.glyphMap; style?: ViewStyle };
 export const Button = memo(function Button({ title, onPress, secondary = false, disabled = false, icon, style }: ButtonProps) {
@@ -24,7 +26,8 @@ export const Chip = memo(function Chip({ title, selected, onPress }: ChipProps) 
 });
 type SectionProps = { title: string; hint?: string; onPress?: () => void };
 export const SectionHeading = memo(function SectionHeading({ title, hint, onPress }: SectionProps) {
-  return <View style={styles.sectionHeading}>{hint ? <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.link, pressed ? styles.pressed : null]}><Label style={{ color: colors.primary, fontSize: typography.label }}>{hint}</Label>{onPress ? <Feather name="arrow-left" size={16} color={colors.primary} /> : null}</Pressable> : <View />}<Label style={styles.sectionTitle}>{title}</Label></View>;
+  const { rtl } = useSettings();
+  return <View style={[styles.sectionHeading, { flexDirection: rtl ? 'row' : 'row-reverse' }]}>{hint ? <Pressable onPress={onPress} disabled={!onPress} style={({ pressed }) => [styles.link, pressed ? styles.pressed : null]}><Label style={{ color: colors.primary, fontSize: typography.label }}>{hint}</Label>{onPress ? <Feather name="arrow-left" size={16} color={colors.primary} /> : null}</Pressable> : <View />}<Label style={styles.sectionTitle}>{title}</Label></View>;
 });
 const styles = StyleSheet.create({
   text: { color: colors.text, fontSize: typography.body, lineHeight: 26, textAlign: 'right', includeFontPadding: false },
